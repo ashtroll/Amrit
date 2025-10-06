@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { Upload, FileText, Download, AlertCircle, CheckCircle, X } from 'lucide-react';
+import { Upload, FileText, Download, AlertCircle, CheckCircle, X, Plus, Save, Trash2 } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import { parseCSVFile, downloadCSVTemplate } from '../utils/csvProcessor';
+import { validateSample } from '../utils/computationEngine';
+import { WaterSample } from '../types';
 
 const UploadData: React.FC = () => {
   const { addSamples } = useData();
@@ -12,6 +14,98 @@ const UploadData: React.FC = () => {
     message: string;
     errors: string[];
   } | null>(null);
+
+  // Manual entry state
+  const [manual, setManual] = useState<{ [k: string]: string | undefined }>(
+    {
+      sampleId: '',
+      latitude: '',
+      longitude: '',
+      pH: '',
+      Fe: '', Mn: '', Zn: '', Cu: '', Cr: '', Cd: '', Pb: '', As: '', Hg: '', Ni: '',
+      collectionDate: '',
+      location: '',
+    }
+  );
+  const [manualErrors, setManualErrors] = useState<string[]>([]);
+  const [staged, setStaged] = useState<WaterSample[]>([]);
+  const [manualStatus, setManualStatus] = useState<{ success: boolean; message: string } | null>(null);
+
+  const parseNumber = (s?: string): number => {
+    if (s === undefined) return NaN;
+    const v = String(s).trim();
+    if (v === '') return NaN;
+    const n = Number(v);
+    return isNaN(n) ? NaN : n;
+  };
+
+  const makeSampleFromManual = (): Partial<WaterSample> => {
+    return {
+      id: crypto.randomUUID(),
+      sampleId: (manual.sampleId || '').trim() || `MANUAL-${Date.now()}`,
+      latitude: parseNumber(manual.latitude as string),
+      longitude: parseNumber(manual.longitude as string),
+      pH: parseNumber(manual.pH as string),
+      Fe: parseNumber(manual.Fe as string),
+      Mn: parseNumber(manual.Mn as string),
+      Zn: parseNumber(manual.Zn as string),
+      Cu: parseNumber(manual.Cu as string),
+      Cr: parseNumber(manual.Cr as string),
+      Cd: parseNumber(manual.Cd as string),
+      Pb: parseNumber(manual.Pb as string),
+      As: parseNumber(manual.As as string),
+      Hg: parseNumber(manual.Hg as string),
+      Ni: parseNumber(manual.Ni as string),
+      collectionDate: manual.collectionDate as string,
+      location: manual.location as string,
+    };
+  };
+
+  const handleManualAddToList = () => {
+    setManualStatus(null);
+    const candidate = makeSampleFromManual();
+    const validation = validateSample(candidate);
+    if (!validation.valid) {
+      setManualErrors(validation.errors);
+      return;
+    }
+    setManualErrors([]);
+    setStaged((prev) => [...prev, candidate as WaterSample]);
+    // Keep sampleId but clear numeric fields for faster consecutive entries
+    setManual((m) => ({
+      ...m,
+      latitude: '', longitude: '', pH: '',
+      Fe: '', Mn: '', Zn: '', Cu: '', Cr: '', Cd: '', Pb: '', As: '', Hg: '', Ni: '',
+      collectionDate: '', location: '',
+    }));
+    setManualStatus({ success: true, message: 'Sample added to list (not yet saved).' });
+  };
+
+  const handleManualSaveNow = () => {
+    setManualStatus(null);
+    const candidate = makeSampleFromManual();
+    const validation = validateSample(candidate);
+    if (!validation.valid) {
+      setManualErrors(validation.errors);
+      return;
+    }
+    setManualErrors([]);
+    addSamples([candidate as WaterSample]);
+    setManualStatus({ success: true, message: 'Sample saved.' });
+    // Reset form after save
+    setManual({ sampleId: '', latitude: '', longitude: '', pH: '', Fe: '', Mn: '', Zn: '', Cu: '', Cr: '', Cd: '', Pb: '', As: '', Hg: '', Ni: '', collectionDate: '', location: '' });
+  };
+
+  const handleManualSaveAll = () => {
+    if (staged.length === 0) return;
+    addSamples(staged);
+    setStaged([]);
+    setManualStatus({ success: true, message: 'All staged samples saved.' });
+  };
+
+  const removeStaged = (id: string) => {
+    setStaged((prev) => prev.filter((s) => s.id !== id));
+  };
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -176,6 +270,116 @@ const UploadData: React.FC = () => {
                   </div>
                 )}
               </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Manual Entry Section */}
+      <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-2xl font-bold text-gray-800">Manual Data Entry</h2>
+          <div className="flex gap-2">
+            <button onClick={handleManualAddToList} className="flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700">
+              <Plus size={18} /> Add to List
+            </button>
+            <button onClick={handleManualSaveNow} className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+              <Save size={18} /> Save Now
+            </button>
+          </div>
+        </div>
+
+        {manualStatus && (
+          <div className={`mb-4 p-3 rounded ${manualStatus.success ? 'bg-green-50 border border-green-200 text-green-800' : 'bg-red-50 border border-red-200 text-red-800'}`}>
+            {manualStatus.message}
+          </div>
+        )}
+
+        {manualErrors.length > 0 && (
+          <div className="mb-4 p-3 rounded bg-red-50 border border-red-200 text-red-800">
+            <p className="font-medium mb-1">Please fix the following:</p>
+            <ul className="list-disc pl-5 text-sm">
+              {manualErrors.map((e, i) => (
+                <li key={i}>{e}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Sample ID</label>
+            <input value={manual.sampleId || ''} onChange={(e) => setManual({ ...manual, sampleId: e.target.value })} placeholder="e.g., S001" className="w-full border border-gray-300 rounded-lg px-3 py-2" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Collection Date</label>
+            <input type="date" value={manual.collectionDate || ''} onChange={(e) => setManual({ ...manual, collectionDate: e.target.value })} className="w-full border border-gray-300 rounded-lg px-3 py-2" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Latitude</label>
+            <input type="number" step="any" value={manual.latitude || ''} onChange={(e) => setManual({ ...manual, latitude: e.target.value })} placeholder="e.g., 26.91" className="w-full border border-gray-300 rounded-lg px-3 py-2" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Longitude</label>
+            <input type="number" step="any" value={manual.longitude || ''} onChange={(e) => setManual({ ...manual, longitude: e.target.value })} placeholder="e.g., 75.78" className="w-full border border-gray-300 rounded-lg px-3 py-2" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Location (optional)</label>
+            <input value={manual.location || ''} onChange={(e) => setManual({ ...manual, location: e.target.value })} placeholder="e.g., Jaipur" className="w-full border border-gray-300 rounded-lg px-3 py-2" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">pH</label>
+            <input type="number" step="any" value={manual.pH || ''} onChange={(e) => setManual({ ...manual, pH: e.target.value })} placeholder="0 - 14" className="w-full border border-gray-300 rounded-lg px-3 py-2" />
+          </div>
+        </div>
+
+        <div className="mt-4">
+          <h4 className="text-sm font-semibold text-gray-800 mb-2">Metals (mg/L)</h4>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+            {['Fe','Mn','Zn','Cu','Cr','Cd','Pb','As','Hg','Ni'].map((m) => (
+              <div key={m}>
+                <label className="block text-xs font-medium text-gray-600 mb-1">{m}</label>
+                <input type="number" step="any" value={(manual as any)[m] || ''} onChange={(e) => setManual({ ...manual, [m]: e.target.value })} placeholder="0.0" className="w-full border border-gray-300 rounded-lg px-2 py-1.5 text-sm" />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {staged.length > 0 && (
+          <div className="mt-6">
+            <div className="flex items-center justify-between mb-2">
+              <h4 className="text-sm font-semibold text-gray-800">Staged Samples ({staged.length})</h4>
+              <button onClick={handleManualSaveAll} className="flex items-center gap-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm">
+                <Save size={16} /> Save All
+              </button>
+            </div>
+            <div className="overflow-x-auto border border-gray-200 rounded-lg">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-3 py-2 text-left">Sample ID</th>
+                    <th className="px-3 py-2 text-left">Location</th>
+                    <th className="px-3 py-2 text-left">Lat</th>
+                    <th className="px-3 py-2 text-left">Lng</th>
+                    <th className="px-3 py-2"></th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {staged.map((s) => (
+                    <tr key={s.id}>
+                      <td className="px-3 py-2 font-medium text-gray-900">{s.sampleId}</td>
+                      <td className="px-3 py-2 text-gray-700">{s.location || 'N/A'}</td>
+                      <td className="px-3 py-2 text-gray-700">{s.latitude}</td>
+                      <td className="px-3 py-2 text-gray-700">{s.longitude}</td>
+                      <td className="px-3 py-2 text-right">
+                        <button onClick={() => removeStaged(s.id)} className="inline-flex items-center gap-1 px-2 py-1 text-red-700 hover:text-red-800">
+                          <Trash2 size={16} /> Remove
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
         )}

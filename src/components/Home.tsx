@@ -1,6 +1,6 @@
 import React from 'react';
 import { Droplet, TrendingUp, Map, FileText, Upload, BarChart3, Shield } from 'lucide-react';
-import { useNavigate } from './Navigation';
+// ...existing code...
 
 interface HomeProps {
   onNavigate: (page: string) => void;
@@ -63,12 +63,12 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
             <Droplet size={48} />
           </div>
           <div>
-            <h1 className="text-5xl font-bold mb-2">HMPI Analyzer</h1>
+            <h1 className="text-5xl font-bold mb-2">AMRIT</h1>
             <p className="text-blue-100 text-xl">Heavy Metal Pollution Index Assessment System</p>
           </div>
         </div>
         <p className="text-lg text-blue-50 max-w-3xl">
-          Advanced environmental monitoring platform for groundwater quality assessment. Automate heavy metal contamination analysis using scientifically validated indices and real-time spatial visualization.
+          Analysis of Metals for Risk in Indian Terrain. Automate heavy metal contamination analysis using scientifically validated indices and real-time spatial visualization.
         </p>
         <div className="flex gap-4 mt-8">
           <button
@@ -137,7 +137,7 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
       </div>
 
       <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-lg shadow-md p-8 border border-green-200">
-        <h2 className="text-2xl font-bold text-gray-800 mb-4">Why Choose HMPI Analyzer?</h2>
+  <h2 className="text-2xl font-bold text-gray-800 mb-4">Why Choose AMRIT?</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <h3 className="font-semibold text-gray-800 mb-3">For Researchers</h3>

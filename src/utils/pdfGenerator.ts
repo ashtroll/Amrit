@@ -32,6 +32,8 @@ export const generatePDFReport = (
     return [
       sample.sampleId,
       sample.location || 'N/A',
+      sample.latitude ?? 'N/A',
+      sample.longitude ?? 'N/A',
       indices?.hpi.toFixed(2) || 'N/A',
       indices?.hei.toFixed(2) || 'N/A',
       indices?.cd.toFixed(2) || 'N/A',
@@ -40,7 +42,7 @@ export const generatePDFReport = (
   });
 
   autoTable(doc, {
-    head: [['Sample ID', 'Location', 'HPI', 'HEI', 'Cd Index', 'Classification']],
+    head: [['Sample ID', 'Location', 'Latitude', 'Longitude', 'HPI', 'HEI', 'Cd Index', 'Classification']],
     body: tableData,
     startY: 95,
     styles: { fontSize: 8 },

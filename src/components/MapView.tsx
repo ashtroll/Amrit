@@ -6,11 +6,15 @@ import { WaterSample, ComputedIndices } from '../types';
 interface MapViewProps {
   samples: WaterSample[];
   computedIndices: ComputedIndices[];
+  // Optional: when set, pan/zoom to this sample and open its popup
+  selectedSampleId?: string;
 }
 
-const MapView: React.FC<MapViewProps> = ({ samples, computedIndices }) => {
+const MapView: React.FC<MapViewProps> = ({ samples, computedIndices, selectedSampleId }) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
+  const markersGroupRef = useRef<L.LayerGroup | null>(null);
+  const markerByIdRef = useRef<Record<string, L.Marker>>({});
 
   const getMarkerColor = (classification: string): string => {
     switch (classification) {
@@ -27,24 +31,34 @@ const MapView: React.FC<MapViewProps> = ({ samples, computedIndices }) => {
     }
   };
 
+  // Initialize map once
   useEffect(() => {
-    if (!mapRef.current) return;
+    if (!mapRef.current || mapInstanceRef.current) return;
+    const map = L.map(mapRef.current).setView([20, 78], 5);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors',
+      maxZoom: 18,
+    }).addTo(map);
+    mapInstanceRef.current = map;
+    markersGroupRef.current = L.layerGroup().addTo(map);
 
-    if (!mapInstanceRef.current) {
-      mapInstanceRef.current = L.map(mapRef.current).setView([20, 78], 5);
+    return () => {
+      map.remove();
+      mapInstanceRef.current = null;
+      markersGroupRef.current = null;
+      markerByIdRef.current = {};
+    };
+  }, []);
 
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors',
-        maxZoom: 18,
-      }).addTo(mapInstanceRef.current);
-    }
-
+  // Update markers when data changes
+  useEffect(() => {
     const map = mapInstanceRef.current;
-    map.eachLayer((layer) => {
-      if (layer instanceof L.Marker) {
-        map.removeLayer(layer);
-      }
-    });
+    const group = markersGroupRef.current;
+    if (!map || !group) return;
+
+    // Clear previous markers and index
+    group.clearLayers();
+    markerByIdRef.current = {};
 
     if (samples.length === 0) return;
 
@@ -63,7 +77,7 @@ const MapView: React.FC<MapViewProps> = ({ samples, computedIndices }) => {
         iconAnchor: [12, 12],
       });
 
-      const marker = L.marker([sample.latitude, sample.longitude], { icon: customIcon }).addTo(map);
+      const marker = L.marker([sample.latitude, sample.longitude], { icon: customIcon });
 
       const popupContent = `
         <div style="font-family: system-ui, -apple-system, sans-serif;">
@@ -74,25 +88,30 @@ const MapView: React.FC<MapViewProps> = ({ samples, computedIndices }) => {
           <p style="margin: 4px 0; font-size: 12px;"><strong>HPI:</strong> ${indices.hpi.toFixed(2)}</p>
           <p style="margin: 4px 0; font-size: 12px;"><strong>HEI:</strong> ${indices.hei.toFixed(2)}</p>
           <p style="margin: 4px 0; font-size: 12px;"><strong>Cd:</strong> ${indices.cd.toFixed(2)}</p>
-          ${indices.criticalMetals.length > 0 ? `<p style="margin: 4px 0; font-size: 12px; color: #dc2626;"><strong>Critical:</strong> ${indices.criticalMetals.join(', ')}</p>` : ''}
+          ${indices.criticalMetals.length > 0 ? `<p style=\"margin: 4px 0; font-size: 12px; color: #dc2626;\"><strong>Critical:</strong> ${indices.criticalMetals.join(', ')}</p>` : ''}
         </div>
       `;
 
       marker.bindPopup(popupContent);
+      marker.addTo(group);
+      markerByIdRef.current[sample.sampleId] = marker;
       bounds.push([sample.latitude, sample.longitude]);
     });
 
     if (bounds.length > 0) {
-      map.fitBounds(bounds, { padding: [50, 50] });
+      map.fitBounds(bounds as any, { padding: [50, 50] });
     }
-
-    return () => {
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove();
-        mapInstanceRef.current = null;
-      }
-    };
   }, [samples, computedIndices]);
+
+  // Focus selected sample
+  useEffect(() => {
+    if (!selectedSampleId || !mapInstanceRef.current) return;
+    const marker = markerByIdRef.current[selectedSampleId];
+    if (marker) {
+      mapInstanceRef.current.setView(marker.getLatLng(), Math.max(mapInstanceRef.current.getZoom(), 12), { animate: true });
+      marker.openPopup();
+    }
+  }, [selectedSampleId]);
 
   return (
     <div className="relative">

@@ -52,10 +52,24 @@ export interface User {
   email: string;
   role: 'admin' | 'researcher' | 'public';
   name: string;
+  avatar_url?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface UserProfile {
+  id: string;
+  user_id: string;
+  name: string;
+  role: 'admin' | 'researcher' | 'public';
+  avatar_url?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface AuthState {
   user: User | null;
-  token: string | null;
+  session: any | null;
   isAuthenticated: boolean;
+  loading: boolean;
 }

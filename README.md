@@ -1,20 +1,29 @@
 # Heavy Metal Pollution Index (HMPI) Analyzer
 
-A comprehensive, production-ready web application for environmental monitoring that automates groundwater contamination assessment using scientifically validated heavy metal pollution indices.
+A comprehensive, production-ready web application for environmental monitoring that automates groundwater contamination assessment using scientifically validated heavy metal pollution indices with Supabase authentication.
 
 ## Overview
 
-The HMPI Analyzer is an advanced platform designed for researchers, environmental scientists, and policymakers to assess groundwater quality through standardized heavy metal pollution indices. The application provides real-time computation, interactive GIS visualization, and comprehensive reporting capabilities.
+The HMPI Analyzer is an advanced platform designed for researchers, environmental scientists, and policymakers to assess groundwater quality through standardized heavy metal pollution indices. The application provides real-time computation, interactive GIS visualization, comprehensive reporting capabilities, manual data entry, and secure user authentication.
 
 ## Key Features
 
-### 1. Data Management
+### 1. User Authentication
+- **Secure Registration**: Email-based account creation with verification
+- **Login System**: Secure authentication with Supabase
+- **User Profiles**: Automatic profile creation with role management
+- **Role-based Access**: Admin, Researcher, and Public access levels
+- **Session Management**: Persistent authentication state
+
+### 2. Data Management
 - **CSV Upload**: Upload water sample data with automated validation
+- **Manual Data Entry**: Interactive form for single or batch sample entry
 - **Template Download**: Pre-formatted CSV template for easy data entry
 - **Real-time Validation**: Instant feedback on data quality and format
 - **Bulk Processing**: Handle multiple samples efficiently
+- **Staging System**: Add multiple manual entries before saving
 
-### 2. Scientific Computation
+### 3. Scientific Computation
 The application calculates three key pollution indices:
 
 #### Heavy Metal Pollution Index (HPI)
@@ -32,30 +41,28 @@ The application calculates three key pollution indices:
 - Based on BIS (Bureau of Indian Standards) limits
 - Comprehensive multi-metal assessment
 
-### 3. GIS Mapping
-- **Interactive Map**: Leaflet.js-based spatial visualization
+### 4. Interactive Mapping & Reports (Marked on map)
+- **Combined View**: Integrated map and reports in one interface
+- **Search Functionality**: Find specific samples by ID, location, or classification
+- **Interactive Map**: Leaflet.js-based spatial visualization with focus capability
 - **Color-coded Markers**: Visual contamination severity indicators
 - **Popup Details**: Comprehensive sample information on click
-- **Auto-fit Bounds**: Automatic map zooming to show all samples
+- **Sample Table**: Scrollable list with click-to-focus functionality
+- **Export Actions**: Quick CSV/PDF export from the combined view
 
-### 4. Dashboard Analytics
+### 5. Dashboard Analytics
 - **Real-time Statistics**: Total samples, averages, distributions
 - **Visual Charts**: Pie charts, bar graphs, trend lines
 - **Classification Breakdown**: Safe, Moderate, High Risk, Critical
+- **High Risk Attention**: Detailed modal showing critical samples requiring attention
 - **Metal Analysis**: Average concentrations for all metals
 - **Key Insights**: Automated analysis highlights
 
-### 5. Reporting System
+### 6. Reporting System
 - **PDF Reports**: Professional formatted reports with statistics
 - **CSV Export**: Complete data with computed indices
 - **Summary Statistics**: Overall contamination assessment
 - **Sample Tables**: Detailed results for all samples
-
-### 6. Security & Authentication
-- **JWT Authentication**: Secure user sessions
-- **Role-based Access**: Admin, Researcher, Public user roles
-- **Input Validation**: Comprehensive data sanitization
-- **Session Management**: Persistent login state
 
 ## Technology Stack
 
@@ -75,17 +82,46 @@ The application calculates three key pollution indices:
 ### Authentication
 - **Context API**: State management
 - **LocalStorage**: Session persistence
-- **JWT Pattern**: Token-based auth
+## Installation & Setup
 
-## Installation
+### Prerequisites
+- Node.js (v18 or higher)
+- npm or yarn
+- Supabase account
+
+### 1. Clone and Install Dependencies
 
 ```bash
 # Clone the repository
 git clone <repository-url>
+cd hmpi2
 
 # Install dependencies
-npm install --legacy-peer-deps
+npm install
+```
 
+### 2. Supabase Setup
+
+1. **Create Supabase Project**
+   - Go to [supabase.com](https://supabase.com)
+   - Create a new project
+   - Note your project URL and anon key
+
+2. **Configure Database**
+   - Go to SQL Editor in Supabase Dashboard
+   - Run the SQL commands from `supabase-setup.sql`
+   - This creates the `profiles` table and security policies
+
+3. **Environment Variables**
+   - Create a `.env` file in the root directory:
+   ```env
+   VITE_SUPABASE_URL=your_supabase_project_url
+   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+   ```
+
+### 3. Run the Application
+
+```bash
 # Start development server
 npm run dev
 
@@ -96,9 +132,10 @@ npm run build
 ## Usage Guide
 
 ### 1. Authentication
-- Login with any email and password (min 6 characters)
-- Register new account with name, email, and password
-- Demo mode: All data stored locally
+- **Register**: Create account with email, password, and name
+- **Email Verification**: Check email and verify account
+- **Login**: Sign in with verified credentials
+- **User Roles**: Default role is 'researcher'
 
 ### 2. Upload Data
 1. Click "Upload Data" in navigation

@@ -15,7 +15,7 @@ const Navigation: React.FC<NavigationProps> = ({ currentPage, onNavigate }) => {
     { id: 'home', label: 'Home', icon: HomeIcon },
     { id: 'upload', label: 'Upload Data', icon: Upload },
     { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
-    { id: 'map', label: 'Map View', icon: Map },
+  { id: 'map-reports', label: 'Marked on map', icon: Map },
     { id: 'reports', label: 'Reports', icon: FileText },
     { id: 'about', label: 'About', icon: Info },
   ];
@@ -30,12 +30,12 @@ const Navigation: React.FC<NavigationProps> = ({ currentPage, onNavigate }) => {
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center gap-3 cursor-pointer" onClick={() => handleNavigate('home')}>
-            <div className="bg-gradient-to-br from-blue-600 to-green-600 rounded-lg p-2">
-              <Droplet size={28} className="text-white" />
+            <div className="rounded-lg p-2">
+              <img src="/logo.png" alt="AMRIT Logo" className="w-10 h-10 object-contain" />
             </div>
             <div className="hidden sm:block">
-              <h1 className="text-xl font-bold text-gray-800">HMPI Analyzer</h1>
-              <p className="text-xs text-gray-500">Environmental Monitoring</p>
+              <h1 className="text-xl font-bold text-gray-800">AMRIT</h1>
+              <p className="text-xs text-gray-500">Analysis of Metals for Risk in Indian Terrain</p>
             </div>
           </div>
 
@@ -131,8 +131,8 @@ const Navigation: React.FC<NavigationProps> = ({ currentPage, onNavigate }) => {
 };
 
 export const useNavigate = () => {
-  return (page: string) => {
-    console.log(`Navigate to: ${page}`);
+  return () => {
+    // Navigate to page
   };
 };
 

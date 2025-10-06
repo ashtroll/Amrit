@@ -31,8 +31,12 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       };
     }
 
-    const avgHPI = indices.reduce((sum, idx) => sum + idx.hpi, 0) / indices.length;
-    const avgHEI = indices.reduce((sum, idx) => sum + idx.hei, 0) / indices.length;
+    // Filter out any NaN values before calculating averages (allow 0 values)
+    const validHPIs = indices.filter(idx => typeof idx.hpi === 'number' && !isNaN(idx.hpi) && isFinite(idx.hpi)).map(idx => idx.hpi);
+    const validHEIs = indices.filter(idx => typeof idx.hei === 'number' && !isNaN(idx.hei) && isFinite(idx.hei)).map(idx => idx.hei);
+    
+    const avgHPI = validHPIs.length > 0 ? validHPIs.reduce((sum, hpi) => sum + hpi, 0) / validHPIs.length : 0;
+    const avgHEI = validHEIs.length > 0 ? validHEIs.reduce((sum, hei) => sum + hei, 0) / validHEIs.length : 0;
 
     const classifications = indices.reduce(
       (acc, idx) => {
@@ -46,15 +50,18 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     samples.forEach((sample) => {
       ['Fe', 'Mn', 'Zn', 'Cu', 'Cr', 'Cd', 'Pb', 'As', 'Hg', 'Ni'].forEach((metal) => {
         const value = sample[metal as keyof WaterSample] as number;
-        if (value > 0) {
+        // Only count metals with valid, positive values
+        if (!isNaN(value) && isFinite(value) && value > 0) {
           metalExceedances[metal] = (metalExceedances[metal] || 0) + value;
         }
       });
     });
 
-    const mostContaminatedMetal = Object.keys(metalExceedances).reduce((a, b) =>
-      metalExceedances[a] > metalExceedances[b] ? a : b
-    , 'None');
+    const mostContaminatedMetal = Object.keys(metalExceedances).length > 0 
+      ? Object.keys(metalExceedances).reduce((a, b) =>
+          metalExceedances[a] > metalExceedances[b] ? a : b
+        )
+      : 'None';
 
     return {
       totalSamples: samples.length,

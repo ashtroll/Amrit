@@ -1,10 +1,26 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
 import { useData } from '../context/DataContext';
-import { Activity, TrendingUp, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Activity, TrendingUp, AlertTriangle, CheckCircle, List, X, Copy } from 'lucide-react';
+// ...existing code...
 
 const Dashboard: React.FC = () => {
   const { samples, computedIndices, stats } = useData();
+
+  const [showAttention, setShowAttention] = useState(false);
+  const attentionList = useMemo(() => {
+    return computedIndices
+      .map((idx, i) => ({ sample: samples[i], idx }))
+      .filter((row) => row && (row.idx.classification === 'High Risk' || row.idx.classification === 'Critical'));
+  }, [samples, computedIndices]);
+
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch (e) {
+      // no-op fallback
+    }
+  };
 
   const classificationData = [
     { name: 'Safe', value: stats.safeSamples, color: '#10b981' },
@@ -14,23 +30,27 @@ const Dashboard: React.FC = () => {
   ];
 
   const metalAverages = samples.length > 0 ? [
-    { metal: 'Fe', avg: samples.reduce((sum, s) => sum + s.Fe, 0) / samples.length },
-    { metal: 'Mn', avg: samples.reduce((sum, s) => sum + s.Mn, 0) / samples.length },
-    { metal: 'Zn', avg: samples.reduce((sum, s) => sum + s.Zn, 0) / samples.length },
-    { metal: 'Cu', avg: samples.reduce((sum, s) => sum + s.Cu, 0) / samples.length },
-    { metal: 'Cr', avg: samples.reduce((sum, s) => sum + s.Cr, 0) / samples.length },
-    { metal: 'Cd', avg: samples.reduce((sum, s) => sum + s.Cd, 0) / samples.length },
-    { metal: 'Pb', avg: samples.reduce((sum, s) => sum + s.Pb, 0) / samples.length },
-    { metal: 'As', avg: samples.reduce((sum, s) => sum + s.As, 0) / samples.length },
-    { metal: 'Hg', avg: samples.reduce((sum, s) => sum + s.Hg, 0) / samples.length },
-    { metal: 'Ni', avg: samples.reduce((sum, s) => sum + s.Ni, 0) / samples.length },
-  ] : [];
+    { metal: 'Fe', values: samples.map(s => s.Fe).filter(v => !isNaN(v) && isFinite(v)) },
+    { metal: 'Mn', values: samples.map(s => s.Mn).filter(v => !isNaN(v) && isFinite(v)) },
+    { metal: 'Zn', values: samples.map(s => s.Zn).filter(v => !isNaN(v) && isFinite(v)) },
+    { metal: 'Cu', values: samples.map(s => s.Cu).filter(v => !isNaN(v) && isFinite(v)) },
+    { metal: 'Cr', values: samples.map(s => s.Cr).filter(v => !isNaN(v) && isFinite(v)) },
+    { metal: 'Cd', values: samples.map(s => s.Cd).filter(v => !isNaN(v) && isFinite(v)) },
+    { metal: 'Pb', values: samples.map(s => s.Pb).filter(v => !isNaN(v) && isFinite(v)) },
+    { metal: 'As', values: samples.map(s => s.As).filter(v => !isNaN(v) && isFinite(v)) },
+    { metal: 'Hg', values: samples.map(s => s.Hg).filter(v => !isNaN(v) && isFinite(v)) },
+    { metal: 'Ni', values: samples.map(s => s.Ni).filter(v => !isNaN(v) && isFinite(v)) },
+  ].map(item => ({
+    metal: item.metal,
+    avg: item.values.length > 0 ? item.values.reduce((sum, v) => sum + v, 0) / item.values.length : 0,
+    count: item.values.length
+  })).filter(item => item.count > 0) : []; // Only show metals with valid data
 
   const indexTrends = computedIndices.slice(0, 20).map((idx, i) => ({
     sample: `S${i + 1}`,
-    HPI: idx.hpi,
-    HEI: idx.hei,
-    Cd: idx.cd,
+    HPI: isNaN(idx.hpi) ? 0 : idx.hpi,
+    HEI: isNaN(idx.hei) ? 0 : idx.hei,
+    Cd: isNaN(idx.cd) ? 0 : idx.cd,
   }));
 
   if (samples.length === 0) {
@@ -47,6 +67,7 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="space-y-6">
+  {/* HPITest removed */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-blue-500">
           <div className="flex items-center justify-between">
@@ -90,8 +111,78 @@ const Dashboard: React.FC = () => {
             </div>
             <AlertTriangle size={40} className="text-red-500" />
           </div>
+          <div className="mt-4">
+            <button
+              onClick={() => setShowAttention(true)}
+              disabled={attentionList.length === 0}
+              className={`inline-flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium border ${attentionList.length === 0 ? 'text-gray-400 border-gray-200 cursor-not-allowed' : 'text-red-700 border-red-200 hover:bg-red-50'}`}
+            >
+              <List size={16} /> View samples
+            </button>
+          </div>
         </div>
       </div>
+
+      {/* Attention Modal */}
+      {showAttention && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setShowAttention(false)}></div>
+          <div className="relative bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[80vh] overflow-hidden">
+            <div className="px-5 py-4 border-b border-gray-200 flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-800">High Risk & Critical Samples ({attentionList.length})</h3>
+              <button onClick={() => setShowAttention(false)} className="p-1 rounded hover:bg-gray-100"><X size={20} /></button>
+            </div>
+            <div className="p-4 overflow-auto">
+              {attentionList.length === 0 ? (
+                <p className="text-sm text-gray-600">No samples require attention right now.</p>
+              ) : (
+                <div className="overflow-x-auto border border-gray-200 rounded-lg">
+                  <table className="w-full text-sm">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-3 py-2 text-left">Sample ID</th>
+                        <th className="px-3 py-2 text-left">Classification</th>
+                        <th className="px-3 py-2 text-left">HPI</th>
+                        <th className="px-3 py-2 text-left">Location</th>
+                        <th className="px-3 py-2 text-left">Critical metals</th>
+                        <th className="px-3 py-2 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {attentionList.map(({ sample, idx }) => (
+                        <tr key={sample.id}>
+                          <td className="px-3 py-2 font-medium text-gray-900">{sample.sampleId}</td>
+                          <td className="px-3 py-2">
+                            <span className={`px-2 py-1 rounded-full text-xs font-semibold ${idx.classification === 'Critical' ? 'bg-red-900 text-white' : 'bg-red-100 text-red-800'}`}>
+                              {idx.classification}
+                            </span>
+                          </td>
+                          <td className="px-3 py-2 text-gray-700">{idx.hpi.toFixed(2)}</td>
+                          <td className="px-3 py-2 text-gray-700">{sample.location || 'N/A'}</td>
+                          <td className="px-3 py-2 text-gray-700">{idx.criticalMetals && idx.criticalMetals.length > 0 ? idx.criticalMetals.join(', ') : '—'}</td>
+                          <td className="px-3 py-2 text-right">
+                            <button
+                              onClick={() => copyToClipboard(sample.sampleId)}
+                              className="inline-flex items-center gap-1 px-2 py-1 rounded border border-gray-200 text-gray-700 hover:bg-gray-50"
+                              title="Copy Sample ID"
+                            >
+                              <Copy size={14} /> Copy ID
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+              <p className="text-xs text-gray-500 mt-3">Tip: Use Marked on map and search by Sample ID to locate the sample on the map.</p>
+            </div>
+            <div className="px-5 py-3 border-t border-gray-200 flex justify-end">
+              <button onClick={() => setShowAttention(false)} className="px-4 py-2 rounded-md border border-gray-300 hover:bg-gray-50">Close</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white rounded-lg shadow-md p-6">
@@ -124,7 +215,10 @@ const Dashboard: React.FC = () => {
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="metal" />
               <YAxis />
-              <Tooltip formatter={(value: number) => value.toFixed(4)} />
+              <Tooltip formatter={(value: number, name: string, props: any) => [
+                `${value.toFixed(4)} mg/L`, 
+                `${name} (${props.payload.count}/${samples.length} samples)`
+              ]} />
               <Bar dataKey="avg" fill="#3b82f6" name="Concentration (mg/L)" />
             </BarChart>
           </ResponsiveContainer>

@@ -97,6 +97,8 @@ const Reports: React.FC = () => {
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Sample ID</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Location</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Latitude</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Longitude</th>
                 <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">HPI</th>
                 <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">HEI</th>
                 <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">Cd</th>
@@ -116,6 +118,8 @@ const Reports: React.FC = () => {
                   <tr key={sample.id} className="hover:bg-gray-50">
                     <td className="px-4 py-3 text-sm font-medium text-gray-900">{sample.sampleId}</td>
                     <td className="px-4 py-3 text-sm text-gray-700">{sample.location || 'N/A'}</td>
+                    <td className="px-4 py-3 text-sm text-gray-700">{sample.latitude ?? 'N/A'}</td>
+                    <td className="px-4 py-3 text-sm text-gray-700">{sample.longitude ?? 'N/A'}</td>
                     <td className="px-4 py-3 text-sm text-gray-900 text-center">{indices?.hpi.toFixed(2)}</td>
                     <td className="px-4 py-3 text-sm text-gray-900 text-center">{indices?.hei.toFixed(2)}</td>
                     <td className="px-4 py-3 text-sm text-gray-900 text-center">{indices?.cd.toFixed(2)}</td>

@@ -11,6 +11,7 @@ dist
 dist-ssr
 *.local
 
+# IDE and OS files
 .vscode/*
 !.vscode/extensions.json
 .idea
@@ -20,4 +21,19 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Debug and temporary files
+debug_*.js
+manual_*.js
+test_*.js
+*.debug.js
+
+# Environment variables
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Supabase
+.supabase/
 .env

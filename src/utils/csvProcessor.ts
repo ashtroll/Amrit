@@ -67,27 +67,49 @@ export const parseCSVFile = (file: File): Promise<{ samples: WaterSample[]; erro
         const errors: string[] = [];
 
         results.data.forEach((row: any, index: number) => {
-          const sample: Partial<WaterSample> = {
-            id: crypto.randomUUID(),
-            sampleId: row.Sample_ID || row.sample_id || row.SampleID,
-            latitude: parseFloat(row.Latitude || row.latitude),
-            longitude: parseFloat(row.Longitude || row.longitude),
-            pH: parseFloat(row.pH || row.ph),
-            Fe: parseFloat(row.Fe || row.fe || row.Iron),
-            Mn: parseFloat(row.Mn || row.mn || row.Manganese),
-            Zn: parseFloat(row.Zn || row.zn || row.Zinc),
-            Cu: parseFloat(row.Cu || row.cu || row.Copper),
-            Cr: parseFloat(row.Cr || row.cr || row.Chromium),
-            Cd: parseFloat(row.Cd || row.cd || row.Cadmium),
-            Pb: parseFloat(row.Pb || row.pb || row.Lead),
-            As: parseFloat(row.As || row.as || row.Arsenic),
-            Hg: parseFloat(row.Hg || row.hg || row.Mercury),
-            Ni: parseFloat(row.Ni || row.ni || row.Nickel),
-            collectionDate: row.Collection_Date || row.collection_date || row.Date,
-            location: row.Location || row.location,
+          // Helper function to safely parse numbers
+          const parseNumber = (value: any): number => {
+            if (value === null || value === undefined) return NaN;
+            if (typeof value === 'number') return value;
+            
+            const strValue = String(value).trim();
+            if (strValue === '' || strValue === 'null' || strValue === 'undefined') return NaN;
+            
+            const num = Number(strValue);
+            return isNaN(num) ? NaN : num;
           };
 
+
+
+          const sample: Partial<WaterSample> = {
+            id: crypto.randomUUID(),
+            sampleId: row.Sample_ID || row.sample_id || row.SampleID || '',
+            latitude: parseNumber(row.Latitude || row.latitude),
+            longitude: parseNumber(row.Longitude || row.longitude),
+            pH: parseNumber(row.pH || row.ph),
+            Fe: parseNumber(row.Fe || row.fe || row.Iron || row.iron_mg_per_l),
+            Mn: parseNumber(row.Mn || row.mn || row.Manganese || row.manganese_mg_per_l),
+            Zn: parseNumber(row.Zn || row.zn || row.Zinc || row.zinc_mg_per_l),
+            Cu: parseNumber(row.Cu || row.cu || row.Copper || row.copper_mg_per_l),
+            Cr: parseNumber(row.Cr || row.cr || row.Chromium || row.chromium_mg_per_l),
+            Cd: parseNumber(row.Cd || row.cd || row.Cadmium || row.cadmium_mg_per_l),
+            Pb: parseNumber(row.Pb || row.pb || row.Lead || row.lead_mg_per_l),
+            As: parseNumber(row.As || row.as || row.Arsenic || row.arsenic_mg_per_l),
+            Hg: parseNumber(row.Hg || row.hg || row.Mercury || row.mercury_mg_per_l),
+            Ni: parseNumber(row.Ni || row.ni || row.Nickel || row.nickel_mg_per_l),
+            collectionDate: row.Collection_Date || row.collection_date || row.Date || '',
+            location:
+              row.Location ||
+              row.location ||
+              ((row.region_name || row.Region_Name || row.region || '') && (row.land_use_type || row.Land_Use_Type || row.landuse || '')
+                ? `${row.region_name || row.Region_Name || row.region || ''}${(row.region_name || row.Region_Name || row.region || '') && (row.land_use_type || row.Land_Use_Type || row.landuse || '') ? ', ' : ''}${row.land_use_type || row.Land_Use_Type || row.landuse || ''}`.trim()
+                : (row.region_name || row.Region_Name || row.region || row.land_use_type || row.Land_Use_Type || row.landuse || '')),
+          };
+
+
+
           const validation = validateSample(sample);
+          
           if (validation.valid) {
             samples.push(sample as WaterSample);
           } else {
@@ -109,6 +131,7 @@ export const exportSamplesToCSV = (samples: WaterSample[], computedIndices: any[
     const indices = computedIndices[index];
     return {
       Sample_ID: sample.sampleId,
+      Location: sample.location || '',
       Latitude: sample.latitude,
       Longitude: sample.longitude,
       pH: sample.pH,
@@ -128,7 +151,6 @@ export const exportSamplesToCSV = (samples: WaterSample[], computedIndices: any[
       Classification: indices?.classification || 'Unknown',
       Critical_Metals: indices?.criticalMetals?.join(';') || 'None',
       Collection_Date: sample.collectionDate || '',
-      Location: sample.location || '',
     };
   });
 

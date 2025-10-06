@@ -19,17 +19,32 @@ const Login: React.FC = () => {
     setLoading(true);
 
     try {
+
       if (isLogin) {
-        await login(formData.email, formData.password);
+        const result = await login(formData.email, formData.password);
+
+        if (result.error) {
+          setError(result.error.message || 'Login failed');
+        } else {
+
+        }
       } else {
         if (!formData.name) {
           setError('Name is required');
           setLoading(false);
           return;
         }
-        await register(formData.email, formData.password, formData.name);
+        const result = await register(formData.email, formData.password, formData.name);
+        if (result.error) {
+          setError(result.error.message || 'Registration failed');
+        } else {
+          setError('Registration successful! Please check your email to verify your account.');
+          setIsLogin(true); // Switch to login mode after successful registration
+          setFormData({ email: formData.email, password: '', name: '' }); // Clear password
+        }
       }
     } catch (err) {
+      console.error('Form submission error:', err);
       setError(err instanceof Error ? err.message : 'Authentication failed');
     } finally {
       setLoading(false);
@@ -46,7 +61,7 @@ const Login: React.FC = () => {
         </div>
 
         <h1 className="text-3xl font-bold text-center text-gray-800 mb-2">
-          HMPI Analyzer
+          AMRIT: Analysis of Metals for Risk in Indian Terrain
         </h1>
         <p className="text-center text-gray-600 mb-8">
           Heavy Metal Pollution Index System
@@ -133,7 +148,11 @@ const Login: React.FC = () => {
           </div>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+            <div className={`border px-4 py-3 rounded-lg text-sm ${
+              error.includes('successful') 
+                ? 'bg-green-50 border-green-200 text-green-700'
+                : 'bg-red-50 border-red-200 text-red-700'
+            }`}>
               {error}
             </div>
           )}
@@ -147,11 +166,7 @@ const Login: React.FC = () => {
           </button>
         </form>
 
-        <div className="mt-6 pt-6 border-t border-gray-200">
-          <p className="text-xs text-gray-500 text-center">
-            {isLogin ? 'Demo credentials: Any email and password (min 6 chars)' : 'Demo mode: Registration creates a local account'}
-          </p>
-        </div>
+        {/* Removed Supabase credentials info text */}
       </div>
     </div>
   );

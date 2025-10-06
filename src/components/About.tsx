@@ -5,9 +5,9 @@ const About: React.FC = () => {
   return (
     <div className="max-w-6xl mx-auto space-y-8">
       <div className="bg-gradient-to-r from-blue-600 to-green-600 rounded-lg shadow-lg p-8 text-white">
-        <h1 className="text-4xl font-bold mb-4">Heavy Metal Pollution Index Analyzer</h1>
+  <h1 className="text-4xl font-bold mb-4">AMRIT: Analysis of Metals for Risk in Indian Terrain</h1>
         <p className="text-xl text-blue-50">
-          Advanced scientific tool for groundwater contamination assessment and environmental monitoring
+          Advanced scientific tool for groundwater contamination assessment and risk analysis in Indian terrain
         </p>
       </div>
 
