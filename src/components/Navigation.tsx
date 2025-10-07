@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Droplet, Home as HomeIcon, Upload, BarChart3, Map, FileText, Info, Menu, X, LogOut, User } from 'lucide-react';
+import { Home as HomeIcon, Upload, BarChart3, Map, FileText, Info, Menu, X, LogOut, User } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export interface NavigationProps {

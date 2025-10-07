@@ -8,3 +8,27 @@
   background: none !important;
   border: none !important;
 }
+
+/* Animated gradient background for hero section */
+.bg-animated-gradient {
+  background: linear-gradient(110deg, #2563eb 0%, #3b82f6 40%, #22c55e 100%);
+  background-size: 200% 200%;
+  animation: gradientShift 8s ease infinite;
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Floating decorative blobs */
+.float-slow {
+  animation: floatY 10s ease-in-out infinite;
+}
+
+@keyframes floatY {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-12px); }
+  100% { transform: translateY(0px); }
+}
