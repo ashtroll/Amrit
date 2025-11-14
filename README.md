@@ -1,4 +1,5 @@
-# Heavy Metal Pollution Index (HMPI) Analyzer
+# **AMRIT**
+## Heavy Metal Pollution Index (HMPI) Analyzer
 
 ## Overview
 
