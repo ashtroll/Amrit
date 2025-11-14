@@ -1,7 +1,5 @@
 # Heavy Metal Pollution Index (HMPI) Analyzer
 
-A comprehensive, production-ready web application for environmental monitoring that automates groundwater contamination assessment using scientifically validated heavy metal pollution indices with Supabase authentication.
-
 ## Overview
 
 The HMPI Analyzer is an advanced platform designed for researchers, environmental scientists, and policymakers to assess groundwater quality through standardized heavy metal pollution indices. The application provides real-time computation, interactive GIS visualization, comprehensive reporting capabilities, manual data entry, and secure user authentication.
